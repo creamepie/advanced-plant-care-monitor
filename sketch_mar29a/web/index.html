@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Plant Care System</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app">
+    <!-- Mobile-Like Top Bar -->
+    <header class="app-header">
+      <div class="app-menu-icon">☰</div>
+      <h1>🌿 Plant Care Dashboard</h1>
+      <div class="status-badge connected">
+        <span id="status-icon">●</span> 
+        <span id="status-text">Connected</span>
+      </div>
+    </header>
+    
+    <main class="app-main">
+      <section class="sensor-panel">
+        <div class="card temp-card">
+          <div class="card-icon">🌡️</div>
+          <div class="card-title">Temperature</div>
+          <div class="card-value"><span id="temp-value">--</span>°C</div>
+          <div class="progress-bar">
+            <div class="progress-fill" id="temp-bar" style="width: 0%"></div>
+          </div>
+        </div>
+        
+        <div class="card humidity-card">
+          <div class="card-icon">💧</div>
+          <div class="card-title">Humidity</div>
+          <div class="card-value"><span id="humidity-value">--</span>%</div>
+          <div class="progress-bar">
+            <div class="progress-fill" id="humidity-bar" style="width: 0%"></div>
+          </div>
+        </div>
+        
+        <div class="card light-card">
+          <div class="card-icon">☀️</div>
+          <div class="card-title">Light</div>
+          <div class="card-value"><span id="light-value">--</span>%</div>
+          <div class="progress-bar">
+            <div class="progress-fill" id="light-bar" style="width: 0%"></div>
+          </div>
+        </div>
+        
+        <div class="card moisture-card">
+          <div class="card-icon">🌊</div>
+          <div class="card-title">Soil Moisture</div>
+          <div class="card-value"><span id="moisture-value">--</span>%</div>
+          <div class="progress-bar">
+            <div class="progress-fill" id="moisture-bar" style="width: 0%"></div>
+          </div>
+        </div>
+        
+        <div class="card rain-card">
+          <div class="card-icon">🌧️</div>
+          <div class="card-title">Rain</div>
+          <div class="card-value"><span id="rain-value">--</span>%</div>
+          <div class="progress-bar">
+            <div class="progress-fill" id="rain-bar" style="width: 0%"></div>
+          </div>
+        </div>
+        
+        <div class="card soil-card">
+          <div class="card-icon">🌱</div>
+          <div class="card-title">Soil Quality</div>
+          <div class="card-value"><span id="soil-value">--</span>%</div>
+          <div class="progress-bar">
+            <div class="progress-fill" id="soil-bar" style="width: 0%"></div>
+          </div>
+        </div>
+      </section>
+      
+      <section class="control-panel">
+        <h2>System Controls</h2>
+        
+        <div class="control-cards">
+          <div class="control-card">
+            <div class="control-title">Water Pump</div>
+            <div class="button-group">
+              <button class="btn" id="pump-on">ON</button>
+              <button class="btn" id="pump-off">OFF</button>
+            </div>
+            <div class="status-indicator" id="pump-status">OFF</div>
+          </div>
+          
+          <div class="control-card">
+            <div class="control-title">Grow Light</div>
+            <div class="button-group">
+              <button class="btn" id="light-off">OFF</button>
+              <button class="btn" id="light-on">ON</button>
+              <button class="btn" id="light-auto">AUTO</button>
+            </div>
+            <div class="status-indicator" id="light-status">OFF</div>
+          </div>
+        </div>
+      </section>
+    </main>
+    
+    <!-- Bottom Nav Bar -->
+    <nav class="bottom-nav">
+      <div class="nav-button">Home</div>
+      <div class="nav-button">Settings</div>
+      <div class="nav-button" id="update-time">Last update: --</div>
+    </nav>
+  </div>
+  
+  <script src="script.js"></script>
+</body>
+</html>
