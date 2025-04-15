@@ -24,9 +24,9 @@
 
 // Touchscreen calibration
 #define TS_MINX 120
-#define TS_MAXX 900
-#define TS_MINY 100
-#define TS_MAXY 940
+#define TS_MAXX 940
+#define TS_MINY 120
+#define TS_MAXY 900
 #define MINPRESSURE 10
 #define MAXPRESSURE 1000
 
@@ -47,13 +47,18 @@ extern TouchScreen ts;
 // Function prototypes
 void initializeDisplay();
 void drawMainScreen();
+void drawLoadingScreen();
+void drawHeader(const char* title);
+void drawSensorCard(const char* label, int x, int y, int w, int h, float value, 
+                   uint16_t color, bool hasDecimal, const char* unit);
+void drawControlButton(const char* label, int x, int y, int w, int h, 
+                      uint16_t color, uint8_t state);
+void drawRainIndicator(bool isRaining);
 void updateDisplay(int lightPercent, int moisturePercent, float temperature, float humidity, bool fanState);
+void updateDisplaySimple(int lightPercent, int moisturePercent, float temperature, float humidity, bool fanState);
 void handleTouchInput();
-void updateStatusIndicators();
-void drawControlButton(String label, int x, int y, int width, int height, uint16_t color, bool active);
-void updateFanStatus(bool fanState);
-void drawSensorCard(String label, int x, int y, int w, int h, uint16_t accentColor);
-void drawSensorIcon(int x, int y, String type, uint16_t color);
-void updateSensorValue(String type, int x, int y, int w, int h, float value, uint16_t color);
+void processTouchOnCurrentPage(int x, int y);
+void refreshDisplay(int lightPercent, int moisturePercent, float temperature, float humidity, bool fanState);
+uint16_t rainbow(byte value);
 
 #endif // DISPLAY_H

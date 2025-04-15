@@ -2,13 +2,12 @@
 #define ACTUATORS_H
 
 #include <Arduino.h>
-#include "config.h"  // Make sure to include config.h for pin definitions
+#include "config.h"
 
-// Global variables for pump control
+// ===============================
 extern unsigned long pumpStartTime;
 extern bool pumpActive;
 extern bool pumpAutoMode; // Expose pumpAutoMode if needed elsewhere
-extern bool pumpAutoMode;
 extern uint8_t currentPumpMode;
 
 #ifndef FAN_MODE_OFF
@@ -24,7 +23,7 @@ uint8_t getLightMode();
 void updateLightBasedOnMode(int lightPercent);
 bool getPumpState();
 bool getLightState();
-void startupAnimation();
+void playStartupAnimation(); // Fixed: renamed from startupAnimation to match implementation
 void setLightState(bool state);
 void setLightColor(uint32_t newColor);
 void swirlAnimation(uint32_t targetColor);
@@ -38,7 +37,7 @@ uint8_t getPumpMode();
 void updatePumpBasedOnMode(int soilMoisturePercent);
 void setPumpState(bool state);
 
-// Fan-related function declarations
+// Enhanced fan-related function declarations
 void initializeFan();
 void setFanState(bool state);
 bool getFanState();

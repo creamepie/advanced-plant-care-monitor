@@ -2,16 +2,23 @@
 #define SENSORS_H
 
 #include <Arduino.h>
-#include <DHT.h>
 #include "config.h"
+#include <DHT.h>
 
-// Function declarations
-bool readLightSensor(int* lightPercent);
-bool readMoistureSensor(int* moisturePercent);
-bool readRainSensor(); // Updated to return a boolean
-bool readTemperatureSensor(float* temperature);
-bool readHumiditySensor(float* humidity);
+// Function prototypes
 void initializeSensors();
-int getSoilMoisturePercent();
+float readLightSensor(); // Changed from int to float to match implementation
+int readMoistureSensor();
+bool readRainSensor();
+float readTemperature();
+float readHumidity();
+void updateSensorReadings();
+
+// Global sensor reading variables
+extern int lightReading;
+extern int moistureReading;
+extern bool rainSensorState;
+extern float temperatureReading;
+extern float humidityReading;
 
 #endif // SENSORS_H

@@ -22,9 +22,9 @@
 // Actuator pin definitions
 #define PUMP_PIN 30            // Relay for water pump (ground-triggered)
 #define RELAY_ACTIVE_LOW true  // Set to true for ground-triggered relay
-#define LIGHT_PIN 6            // NeoPixel LEDs
-#define NUM_LEDS 16            // Number of LEDs in your strip
-#define BRIGHTNESS 150         // Default LED brightness
+#define LIGHT_PIN 26            // NeoPixel LEDs
+#define NUM_LEDS 24            // Number of LEDs in your strip
+#define BRIGHTNESS 100         // Default LED brightness
 
 // Fan pin definition
 #define FAN_PIN 31 // Digital pin for fan control
@@ -58,7 +58,44 @@
 #define READING_INTERVAL 5000
 #define ESP_COMM_INTERVAL 10000 // Send data to ESP every 10 seconds
 
-// Display settings
-#define DISPLAY_UPDATE_INTERVAL 1000  // Update display every second
+// Improved timing parameters
+#define SENSOR_READ_INTERVAL 2000      // Read sensors every 2 seconds (was scattered throughout code)
+#define DISPLAY_UPDATE_INTERVAL 500    // Update display every 0.5 seconds 
+#define PUMP_CONTROL_INTERVAL 5000     // Check pump logic every 5 seconds
+#define FAN_CONTROL_INTERVAL 10000     // Check fan logic every 10 seconds
+#define LIGHT_CONTROL_INTERVAL 5000    // Check light logic every 5 seconds
+#define ESP_RECEIVE_TIMEOUT 100        // Maximum time to spend in ESP receive function
+
+// System safety parameters
+#define PUMP_MIN_RUN_TIME 3000         // Minimum pump run time (3 seconds)
+#define PUMP_COOLDOWN_TIME 120000      // Cooldown between auto activations (2 minutes)
+
+// Moisture thresholds with wider hysteresis
+#define SOIL_VERY_DRY_THRESHOLD 15     // Turn on pump when moisture below 15% (was 20%)
+#define SOIL_VERY_WET_THRESHOLD 85     // Turn off pump when moisture above 85% (was 80%)
+
+// CORRECTED light level thresholds for fixed sensor
+// Now that the sensor is correctly giving 0 for dark and 100 for bright:
+#define LIGHT_DARK_THRESHOLD 25        // Turn on lights when below 25% brightness (room is dark)
+#define LIGHT_BRIGHT_THRESHOLD 75      // Turn off lights when above 75% brightness (room is bright)
+
+// Temperature thresholds for fan
+#define TEMP_HIGH_THRESHOLD 30.0       // Turn on fan when above 30°C
+#define TEMP_LOW_THRESHOLD 25.0        // Turn off fan when below 25°C
+
+// Relay-specific parameters for stable operation
+#define RELAY_SETTLE_TIME 20      // ms to wait after toggling relay state
+#define RELAY_RETRIGGER_DELAY 50  // ms to wait before checking relay state again
+
+// Updated timing parameters for better pump stability
+#define PUMP_DEBOUNCE_TIME 10000        // Minimum 10 seconds between pump relay state changes
+#define PUMP_SAFETY_TIMEOUT 20000        // Max 20 seconds pump on time for safety
+#define PUMP_MIN_RUN_TIME 10000         // Minimum 10 seconds pump run time once started
+#define PUMP_COOLDOWN_TIME 180000       // 3 minutes cooldown between auto activations
+#define PUMP_MAINTENANCE_INTERVAL 1800000 // Run pump at least every 30 minutes if very dry
+
+// Extremely wide moisture thresholds to prevent oscillation
+#define SOIL_VERY_DRY_THRESHOLD 15     // Turn on pump when moisture below 15%
+#define SOIL_VERY_WET_THRESHOLD 90     // Turn off pump when moisture above 90%
 
 #endif // CONFIG_H

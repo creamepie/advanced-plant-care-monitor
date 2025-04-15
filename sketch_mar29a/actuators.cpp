@@ -1,75 +1,86 @@
+// ===============================
+// === INCLUDES & GLOBALS      ===
+// ===============================
+
 #include "actuators.h"
-#include <avr/wdt.h>  // Add this line to fix wdt_reset errors
+#include <avr/wdt.h>
 #include <Adafruit_NeoPixel.h>
 #include <Arduino.h>
 
-// Add or replace these globals at the top with other globals
-bool pumpAutoMode = true;  // Define with initial value
+// --- Pump State ---
+bool pumpAutoMode = true;
 unsigned long pumpStartTime = 0;
 bool pumpActive = false;
-uint8_t currentPumpMode = PUMP_MODE_AUTO;  // Default to auto mode
+uint8_t currentPumpMode = PUMP_MODE_AUTO;
 unsigned long lastPumpStateChange = 0;
-const unsigned long PUMP_DEBOUNCE_TIME = 1000; // 1 second debounce
 
-// Add this global variable
+// --- Fan State (Relay, not PWM) ---
 bool fanState = false;
+uint8_t currentFanMode = FAN_MODE_AUTO;
 
-// LED effect settings
-#define FADE_STEPS 50       // Number of steps for fade effect
-#define FADE_DELAY 20       // Milliseconds between fade steps
-#define COLOR_CYCLE_DELAY 30 // Milliseconds between color changes
-
-// Plant-friendly light colors
-const uint32_t GROW_COLOR = Adafruit_NeoPixel::Color(255, 255, 255); // Full spectrum white
-const uint32_t BLOOM_COLOR = Adafruit_NeoPixel::Color(255, 180, 210); // Pink/purple for flowering
-const uint32_t SEEDLING_COLOR = Adafruit_NeoPixel::Color(140, 255, 140); // Gentle green for seedlings
-const uint32_t NIGHT_COLOR = Adafruit_NeoPixel::Color(10, 0, 30);   // Very dim blue for night viewing
-
-// Current light settings
+// --- Light State ---
 uint8_t currentBrightness = 0;
-uint32_t currentColor = GROW_COLOR;
+uint32_t currentColor = Adafruit_NeoPixel::Color(255, 255, 255);
 bool fadeInProgress = false;
+uint8_t currentLightMode = LIGHT_MODE_AUTO;
 
-// Create NeoPixel object
+// --- NeoPixel Object ---
 Adafruit_NeoPixel pixels(NUM_LEDS, LIGHT_PIN, NEO_GRB + NEO_KHZ800);
 
-// Global variables to track actuator states
-bool pumpState = false;
-uint8_t currentLightMode = LIGHT_MODE_AUTO; // Default to auto mode
-uint8_t currentFanMode = FAN_MODE_AUTO; // Default to FAN_MODE_AUTO
+// --- Light Color Presets ---
+const uint32_t GROW_COLOR     = Adafruit_NeoPixel::Color(255, 255, 255);
+const uint32_t BLOOM_COLOR    = Adafruit_NeoPixel::Color(255, 180, 210);
+const uint32_t SEEDLING_COLOR = Adafruit_NeoPixel::Color(140, 255, 140);
+const uint32_t NIGHT_COLOR    = Adafruit_NeoPixel::Color(10, 0, 30);
+
+// ===============================
+// === ACTUATOR INITIALIZATION ===
+// ===============================
 
 void initializePump() {
-  // Set pump pin as output
   pinMode(PUMP_PIN, OUTPUT);
-  
-  // Ensure pump starts in OFF state
   digitalWrite(PUMP_PIN, RELAY_ACTIVE_LOW ? HIGH : LOW);
-  
-  // Initialize state tracking variables
   pumpActive = false;
   currentPumpMode = PUMP_MODE_AUTO;
-  
   Serial.println("Pump system initialized in AUTO mode");
 }
 
 void initializeFan() {
   pinMode(FAN_PIN, OUTPUT);
-  digitalWrite(FAN_PIN, LOW); // Ensure fan starts off
+  digitalWrite(FAN_PIN, RELAY_ACTIVE_LOW ? HIGH : LOW);
   fanState = false;
-  Serial.println("Fan initialized");
+  currentFanMode = FAN_MODE_AUTO;
+  Serial.println("Fan relay initialized in AUTO mode");
 }
 
 void initializeActuators() {
-  // Initialize NeoPixel
+  // NeoPixel setup
   pixels.begin();
   pixels.setBrightness(BRIGHTNESS);
-  pixels.clear(); // Set all pixels to 'off'
-  pixels.show();  // Initialize all pixels to 'off'
-  
-  // Properly initialize pump pin with pull-up
+  pixels.clear();
+  pixels.show();
+  playStartupAnimation();
+
+  // Pump and fan setup
   pinMode(PUMP_PIN, OUTPUT);
-  digitalWrite(PUMP_PIN, RELAY_ACTIVE_LOW ? HIGH : LOW);  // Ensure pump is OFF
+  digitalWrite(PUMP_PIN, RELAY_ACTIVE_LOW ? HIGH : LOW);
   pumpActive = false;
+  pumpAutoMode = true;
+  initializePump();
+  initializeFan();
+
+  Serial.println("All actuators initialized");
+  Serial.println("WS2812 RGB LEDs configured for plant lighting");
+}
+
+// ===============================
+// === LIGHT CONTROL FUNCTIONS  ===
+// ===============================
+
+void playStartupAnimation() {
+  // Start with very low brightness for elegance
+  pixels.setBrightness(10);
+  
   pumpAutoMode = true;
   
   // Initialize pump
@@ -82,32 +93,12 @@ void initializeActuators() {
   Serial.println("WS2812 RGB LEDs configured for plant lighting");
 }
 
-// Forward declaration to avoid scope errors
-void startupLightShow();
-
-// Refined startup animation with sophisticated aesthetic
-
-void startupAnimation() {
-  // Call the existing function to keep behavior consistent
-  startupLightShow();
-}
-
-void startupLightShow() {
-  // Store current state to restore later
-  uint32_t savedColor = currentColor;
-  uint8_t savedBrightness = currentBrightness;
-  
-  // Ensure LEDs start off
-  pixels.clear();
-  pixels.show();
-  
-  Serial.println("Initializing lighting system...");
-  
+void playStartupAnimation() {
   // Start with very low brightness for elegance
   pixels.setBrightness(10);
   
   // PHASE 1: Gentle wake-up - subtle fade in of soft blue
-  uint32_t softBlue = Adafruit_NeoPixel::Color(40, 60, 90);
+  uint32_t softBlue = Adafruit_NeoPixel::Color(20, 30, 90);
   
   // Fill all pixels with the soft blue color
   for(int i = 0; i < NUM_LEDS; i++) {
@@ -144,10 +135,6 @@ void startupLightShow() {
     pixels.show();
     delay(20);
   }
-  
-  delay(200);
-  
-  // PHASE 3: Sophisticated reveal - elegant transition to final plant light
   
   delay(200);
   wdt_reset();
@@ -196,6 +183,8 @@ void startupLightShow() {
     pixels.show();
   } else {
     // Otherwise, restore proper color and brightness
+    uint32_t savedColor = currentColor;
+    uint8_t savedBrightness = currentBrightness;
     setLightColor(savedColor);
     pixels.setBrightness(savedBrightness);
     pixels.show();
@@ -507,12 +496,8 @@ void updatePumpBasedOnMode(int soilMoisturePercent) {
   }
   lastUpdate = millis();
   
-  // Add bounds checking for moisture readings
-  if (soilMoisturePercent < 0 || soilMoisturePercent > 100) {
-    Serial.print("WARN: Invalid moisture reading: ");
-    Serial.println(soilMoisturePercent);
-    return; // Skip this update if reading is invalid
-  }
+  // For digital sensor, reading is already stable (either 20% or 80%)
+  // No need for the averaging array with digital readings
   
   // Only take action if in AUTO mode
   if (currentPumpMode == PUMP_MODE_AUTO) {
@@ -525,11 +510,11 @@ void updatePumpBasedOnMode(int soilMoisturePercent) {
     
     // Digital sensor gives us 20% (dry) or 80% (wet)
     // So we can use 50% as the decision boundary
-    if (!pumpActive && soilMoisturePercent < SOIL_MOISTURE_DRY_THRESHOLD) {
+    if (!pumpActive && soilMoisturePercent < 50) {
       Serial.println("AUTO: Soil too dry - turning pump on");
       setPumpState(true);
     } 
-    else if (pumpActive && soilMoisturePercent > SOIL_MOISTURE_WET_THRESHOLD) {
+    else if (pumpActive && soilMoisturePercent > 50) {
       Serial.println("AUTO: Soil moisture sufficient - turning pump off");
       setPumpState(false);
     }
@@ -571,35 +556,33 @@ uint8_t getLightMode() {
 }
 
 void updateLightBasedOnMode(int lightPercent) {
-  static bool wasLightOn = false;
   // Only take action if in AUTO mode
   if (currentLightMode == LIGHT_MODE_AUTO) {
-    // Add hysteresis: Turn on at <30%, turn off at >70%
-    if (lightPercent < 30 && !wasLightOn) {
+    if (lightPercent < 30) {
       // It's dark, turn on lights with a natural daylight color
       if (!getLightState()) {
         setLightColor(SEEDLING_COLOR);
         setLightState(true);
-        wasLightOn = true;
-        Serial.println("AUTO: Turning ON lights due to low light levels");
       }
+      Serial.println("AUTO: Turning ON lights due to low light levels");
     } 
-    else if (lightPercent > 70 && wasLightOn) {
+    else if (lightPercent > 70) {
       // It's bright, turn off lights
       if (getLightState()) {
         setLightState(false);
-        wasLightOn = false;
-        Serial.println("AUTO: Turning OFF lights due to sufficient light");
       }
+      Serial.println("AUTO: Turning OFF lights due to sufficient light");
     }
   }
 }
 
 void setFanState(bool state) {
-  digitalWrite(FAN_PIN, state ? HIGH : LOW);
-  fanState = state;
-  Serial.print("Fan state set to: ");
-  Serial.println(state ? "ON" : "OFF");
+  if (state != fanState) {
+    digitalWrite(FAN_PIN, state ? (RELAY_ACTIVE_LOW ? LOW : HIGH) : (RELAY_ACTIVE_LOW ? HIGH : LOW));
+    fanState = state;
+    Serial.print("Fan state changed to: ");
+    Serial.println(state ? "ON" : "OFF");
+  }
 }
 
 bool getFanState() {
@@ -608,8 +591,7 @@ bool getFanState() {
 
 void setFanMode(uint8_t mode) {
   currentFanMode = mode;
-
-  switch (mode) {
+  switch(mode) {
     case FAN_MODE_OFF:
       setFanState(false);
       break;
@@ -617,10 +599,9 @@ void setFanMode(uint8_t mode) {
       setFanState(true);
       break;
     case FAN_MODE_AUTO:
-      // Fan state will be controlled automatically
+      // AUTO: handled by updateFanBasedOnMode
       break;
   }
-
   Serial.print("Fan mode changed to: ");
   Serial.println(mode == FAN_MODE_OFF ? "OFF" : (mode == FAN_MODE_ON ? "ON" : "AUTO"));
 }
@@ -630,13 +611,19 @@ uint8_t getFanMode() {
 }
 
 void updateFanBasedOnMode(float temperature) {
+  static float lastTemp = -100;
+  static unsigned long lastUpdateTime = 0;
+  if (millis() - lastUpdateTime < 5000) return;
+  if (abs(temperature - lastTemp) < 0.2) return;
+  lastTemp = temperature;
+  lastUpdateTime = millis();
   if (currentFanMode == FAN_MODE_AUTO) {
-    if (temperature > 30.0) {
-      setFanState(true);
+    if (temperature > TEMP_HIGH_THRESHOLD && !fanState) {
       Serial.println("AUTO: Turning ON fan due to high temperature");
-    } else if (temperature < 25.0) {
-      setFanState(false);
+      setFanState(true);
+    } else if (temperature < TEMP_LOW_THRESHOLD && fanState) {
       Serial.println("AUTO: Turning OFF fan due to low temperature");
+      setFanState(false);
     }
   }
 }
